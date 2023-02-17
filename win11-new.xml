@@ -1,0 +1,201 @@
+<domain xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0" type="kvm">
+  <name>win11-new</name>
+  <uuid>f0960000-0000-1000-8000-80fa5b6c8468</uuid>
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="http://microsoft.com/win/10"/>
+    </libosinfo:libosinfo>
+  </metadata>
+  <memory unit="KiB">8045568</memory>
+  <currentMemory unit="KiB">8045568</currentMemory>
+  <vcpu placement="static">8</vcpu>
+  <cputune>
+    <vcpupin vcpu="0" cpuset="2"/>
+    <vcpupin vcpu="1" cpuset="8"/>
+    <vcpupin vcpu="2" cpuset="3"/>
+    <vcpupin vcpu="3" cpuset="9"/>
+    <vcpupin vcpu="4" cpuset="4"/>
+    <vcpupin vcpu="5" cpuset="10"/>
+    <vcpupin vcpu="6" cpuset="5"/>
+    <vcpupin vcpu="7" cpuset="11"/>
+    <emulatorpin cpuset="0-1,6-7"/>
+  </cputune>
+  <sysinfo type="smbios">
+    <bios>
+      <entry name="vendor">INSYDE Corp.</entry>
+      <entry name="version">1.07.16</entry>
+      <entry name="date">06/10/2020</entry>
+      <entry name="release">1.07.16</entry>
+    </bios>
+    <system>
+      <entry name="manufacturer">Notebook</entry>
+      <entry name="product">NH5x_7xRCx,RDx</entry>
+      <entry name="uuid">f0960000-0000-1000-8000-80fa5b6c8468</entry>
+    </system>
+  </sysinfo>
+  <os>
+    <type arch="x86_64" machine="pc-i440fx-6.1">hvm</type>
+    <loader readonly="yes" type="pflash">/run/current-system/profile/share/firmware/ovmf_x64.bin</loader>
+    <nvram>/var/lib/libvirt/qemu/nvram/win11_VARS.fd</nvram>
+    <bootmenu enable="no"/>
+    <smbios mode="sysinfo"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <hyperv mode="passthrough">
+      <relaxed state="on"/>
+      <vapic state="on"/>
+      <spinlocks state="on" retries="8191"/>
+      <vpindex state="on"/>
+      <synic state="on"/>
+      <stimer state="on">
+        <direct state="on"/>
+      </stimer>
+      <reset state="on"/>
+      <vendor_id state="on" value="1234567890ab"/>
+    </hyperv>
+    <kvm>
+      <hidden state="on"/>
+      <hint-dedicated state="on"/>
+      <poll-control state="on"/>
+    </kvm>
+    <vmport state="off"/>
+    <ioapic driver="kvm"/>
+  </features>
+  <cpu mode="host-passthrough" check="none" migratable="off">
+    <topology sockets="1" dies="1" cores="4" threads="2"/>
+    <cache mode="passthrough"/>
+    <feature policy="disable" name="hypervisor"/>
+    <feature policy="require" name="vmx"/>
+  </cpu>
+  <clock offset="utc">
+    <timer name="rtc" tickpolicy="catchup"/>
+    <timer name="pit" tickpolicy="delay"/>
+    <timer name="hpet" present="no"/>
+    <timer name="tsc" present="yes" mode="native"/>
+    <timer name="hypervclock" present="yes"/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled="no"/>
+    <suspend-to-disk enabled="yes"/>
+  </pm>
+  <devices>
+    <emulator>/run/current-system/profile/bin/qemu-system-x86_64</emulator>
+    <controller type="usb" index="0" model="qemu-xhci" ports="15">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x04" function="0x0"/>
+    </controller>
+    <controller type="pci" index="0" model="pci-root"/>
+    <controller type="pci" index="1" model="pci-bridge">
+      <model name="pci-bridge"/>
+      <target chassisNr="1"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x07" function="0x0"/>
+    </controller>
+    <controller type="sata" index="0">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x05" function="0x0"/>
+    </controller>
+    <controller type="virtio-serial" index="0">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x06" function="0x0"/>
+    </controller>
+    <controller type="ide" index="0">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x01" function="0x1"/>
+    </controller>
+    <interface type="network">
+      <mac address="52:54:00:54:a9:56"/>
+      <source network="default"/>
+      <model type="virtio"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x02" function="0x0"/>
+    </interface>
+    <serial type="pty">
+      <target type="isa-serial" port="0">
+        <model name="isa-serial"/>
+      </target>
+    </serial>
+    <console type="pty">
+      <target type="serial" port="0"/>
+    </console>
+    <channel type="spicevmc">
+      <target type="virtio" name="com.redhat.spice.0"/>
+      <address type="virtio-serial" controller="0" bus="0" port="1"/>
+    </channel>
+    <input type="keyboard" bus="ps2"/>
+    <input type="mouse" bus="ps2"/>
+    <input type="keyboard" bus="virtio">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x10" function="0x0"/>
+    </input>
+    <input type="mouse" bus="virtio">
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x11" function="0x0"/>
+    </input>
+    <tpm model="tpm-crb">
+      <backend type="passthrough">
+        <device path="/dev/tpm0"/>
+      </backend>
+    </tpm>
+    <graphics type="spice" port="-1" autoport="no">
+      <listen type="address"/>
+      <image compression="off"/>
+      <gl enable="no"/>
+    </graphics>
+    <sound model="ich9">
+      <audio id="1"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x0e" function="0x0"/>
+    </sound>
+    <audio id="1" type="pulseaudio" timerPeriod="1000" serverName="/run/user/1000/pulse/native">
+      <input mixingEngine="no" bufferLength="512"/>
+      <output mixingEngine="no" bufferLength="512"/>
+    </audio>
+    <video>
+      <model type="none"/>
+    </video>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x03" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x1"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x08" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x2"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x09" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x3"/>
+      </source>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x0a" function="0x0"/>
+    </hostdev>
+    <hostdev mode="subsystem" type="pci" managed="yes">
+      <source>
+        <address domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
+      </source>
+      <boot order="1"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x0b" function="0x0"/>
+    </hostdev>
+    <redirdev bus="usb" type="spicevmc">
+      <address type="usb" bus="0" port="2"/>
+    </redirdev>
+    <redirdev bus="usb" type="spicevmc">
+      <address type="usb" bus="0" port="3"/>
+    </redirdev>
+    <memballoon model="none"/>
+    <shmem name="looking-glass">
+      <model type="ivshmem-plain"/>
+      <size unit="M">256</size>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x0d" function="0x0"/>
+    </shmem>
+  </devices>
+  <qemu:commandline>
+    <qemu:arg value="-acpitable"/>
+    <qemu:arg value="file=/home/jiwei/Documents/passthrough/ssdt1.dat"/>
+  </qemu:commandline>
+</domain>

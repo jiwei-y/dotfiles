@@ -1,0 +1,72 @@
+## start swap
+sudo herd restart swap-/swap/swapfile
+
+## Use http proxy for "guix pull"
+https_proxy=http://127.0.0.1:10809 guix pull --substitute-urls='https://mirror.sjtu.edu.cn/guix/'
+
+## Use http proxy for guix-daemon
+sudo herd set-http-proxy guix-daemon http://127.0.0.1:10809
+
+## View globally installed packages
+guix package --list-installed --profile=/run/current-system/profile
+
+## export manifest of installed packages
+guix package --export-manifest
+
+## refresh cran packages in my channel
+guix refresh -t cran -m ~/misc/dotfiles/manifest.scm
+
+## refresh other packages in my channel
+guix refresh -m ~/misc/dotfiles/manifest.scm
+
+## system reconfigure
+sudo guix system reconfigure ~/misc/dotfiles/system/config.scm
+
+## home configuration import
+guix home import ~/misc/dotfiles/test/home
+
+## home reconfigure
+guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
+
+## combination
+guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix upgrade && guix home reconfigure /home/jiwei/dotfiles/home/home-configuration.scm
+
+## solve problems of fonts and cursors in flatpak
+sh ~/misc/dotfiles/flatpak.sh
+
+## looking-glass
+touch /dev/shm/looking-glass
+chown jiwei:kvm /dev/shm/looking-glass
+chmod 660 /dev/shm/looking-glass
+
+## onedrive
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //10.0.0.253/onedrive-csvihet/ /home/jiwei/onedrive-csvihet/ -vv
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //10.0.0.253/onedrive-personal/ /home/jiwei/onedrive-personal/ -vv
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //100.92.235.166/onedrive-csvihet/ /home/jiwei/onedrive-csvihet/ -vv
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //100.92.235.166/onedrive-personal/ /home/jiwei/onedrive-personal/ -vv
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //192.168.122.206/onedrive-csvihet/ /home/jiwei/onedrive-csvihet/ -vv
+sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //192.168.122.206/onedrive-personal/ /home/jiwei/onedrive-personal/ -vv
+
+## stata
+guix shell -CNF -u user --no-cwd --share=$HOME/GAIA --share=$HOME/.stata17 --share=$HOME/ado --preserve='^DISPLAY$' gtk+ coreutils gzip tar findutils gcc@12:lib ncurses-with-tinfo@5 zlib libtiff libxml2 libxtst hicolor-icon-theme font-my-noto-core font-my-noto-emoji font-my-noto-sans-cjk font-my-noto-serif-cjk gnome-themes-extra murrine orchis-theme
+# /home/user/GAIA/stata17install/install
+# ./stinit
+sh /home/user/GAIA/runstata.sh
+
+
+## test build sample
+guix build onedrive -f ~/misc/dotfiles/test/sync/sync.scm -L ~/misc/dotfiles/test/sync
+
+## qv2ray problems with wayland
+QT_QPA_PLATFORM=xcb qv2ray
+
+## nautilus problem
+NAUTILUS_EXTENSION_PATH=/run/current-system/profile/lib/nautilus/site-extensions nautilus
+
+## before sleep
+sh ~/misc/dotfiles/suspend.sh
+
+## afrer resume
+sudo herd restart kernel-module-loader
+
+guix pull -C ~/Downloads/channels.scm
