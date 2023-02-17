@@ -38,6 +38,39 @@
 
 (use-package-modules certs gnome firmware samba)
 
+
+
+
+(define (linux-urls version)
+  "Return a list of URLS for Linux VERSION."
+  (list (string-append "https://www.kernel.org/pub/linux/kernel/v"
+                       (version-major version) ".x/linux-" version ".tar.xz")))
+
+(define* (corrupt-linux freedo #:key (name "linux"))
+  (package
+   (inherit
+    (customize-linux
+     #:name name
+     #:source (origin (inherit (package-source freedo))
+                      (method url-fetch)
+                      (uri (linux-urls (package-version freedo)))
+                      (patches '()))
+     #:configs (list "CONFIG_MT7921E=m")))
+   (version (package-version freedo))
+   (home-page "https://www.kernel.org/")
+   (synopsis "Linux kernel with nonfree binary blobs included")
+   (description
+    "The unmodified Linux kernel, including nonfree blobs, for running Guix
+System on hardware which requires nonfree software to function.")))
+
+(define-public linux-6.1
+  (corrupt-linux linux-libre-6.1))
+
+(define-public linux linux-6.1)
+
+
+
+
 ;; Utils
 
 (define (pkgs . specs)
@@ -102,7 +135,7 @@
             (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
                   ;; Required modules, YMMV.
                   (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
-                  (prefix (string-append mount-point "/boot/grub"))
+                  (prefix (string-append mount-point "/root/boot/grub"))  ; btrfs subvol root
                   ;; Different configuration required to set up a crypto
                   ;; device. Change crypto_uuid to match your output of
                   ;; `cryptsetup luksUUID /device`.
@@ -110,7 +143,7 @@
                   (config #$(plain-file "grub.cfg" "set crypto_uuid=3758ac97d5214d80adcad19d4bc57b88
 cryptomount -u $crypto_uuid
 set root=crypto0
-set prefix=($root)/boot/grub
+set prefix=($root)/root/boot/grub
 insmod normal
 normal"))
                   (target-esp (if (file-exists? (string-append mount-point efi-dir))
@@ -181,14 +214,14 @@ normal"))
                           (disk-iosched (list "mq-deadline"))
                           (sound-power-save-on-ac 1)
                           (runtime-pm-on-ac "auto")))
-                      (simple-service 
-                        'custom-udev-rules udev-service-type 
-                        (list lkrg-my))
-                      (service kernel-module-loader-service-type
-                              '("lkrg"))
-                      (simple-service 'lkrg-config etc-service-type
-                                      (list `("modprobe.d/lkrg.conf"
-                                              ,lkrg-config)))
+;                       (simple-service 
+;                         'custom-udev-rules udev-service-type 
+;                         (list lkrg-my))
+;                       (service kernel-module-loader-service-type
+;                               '("lkrg"))
+;                       (simple-service 'lkrg-config etc-service-type
+;                                       (list `("modprobe.d/lkrg.conf"
+;                                               ,lkrg-config)))
                       (modify-services %desktop-services
                           (delete modem-manager-service-type)
                           (delete ntp-service-type)
@@ -222,8 +255,9 @@ normal"))
                                                (inherit config)
                                                (settings (append %kicksecure-sysctl-rules
                                                                  %default-sysctl-settings))))))))
-  (kernel linux-xanmod-hardened)
-  (kernel-loadable-modules (list lkrg-my))
+  ; (kernel linux-xanmod-hardened)
+  (kernel linux)
+  ; (kernel-loadable-modules (list lkrg-my))
   (initrd microcode-initrd)
   (initrd-modules
     (cons* "nvme"
@@ -284,21 +318,24 @@ normal"))
                          (device "/harden/var/tmp")
                          (mount-point "/var/tmp")
                          (type "none")
-                         (flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/var/log")
                          (mount-point "/var/log")
                          (type "none")
-                         (flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/tmp")
                          (mount-point "/tmp")
                          (type "none")
-                         (flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
                          (dependencies mapped-devices))
                        (file-system
@@ -306,21 +343,24 @@ normal"))
                          (mount-point "/home")
                          (type "none")
                          ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
-                         (flags '(no-atime no-suid no-dev bind-mount))
+                         ;(flags '(no-atime no-suid no-dev bind-mount))
+                         (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/boot")
                          (mount-point "/boot")
                          (type "none")
-                         (flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                         (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
                          (dependencies mapped-devices))
                        (file-system
                          (device (uuid "3E3D-CF51" 'fat32))
                          (mount-point "/boot/efi")
                          (type "vfat")
-                         (flags '(no-suid no-exec no-dev))))
+                         ;(flags '(no-suid no-exec no-dev))
+                        ))
                  (delete %debug-file-system
                          %base-file-systems)))
   (swap-devices
