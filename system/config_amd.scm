@@ -135,7 +135,7 @@ System on hardware which requires nonfree software to function.")))
             (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
                   ;; Required modules, YMMV.
                   (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
-                  (prefix (string-append mount-point "/root/boot/grub"))  ; btrfs subvol root
+                  (prefix (string-append mount-point "/root/harden/boot/grub"))  ; btrfs subvol root
                   ;; Different configuration required to set up a crypto
                   ;; device. Change crypto_uuid to match your output of
                   ;; `cryptsetup luksUUID /device`.
@@ -143,7 +143,7 @@ System on hardware which requires nonfree software to function.")))
                   (config #$(plain-file "grub.cfg" "set crypto_uuid=3758ac97d5214d80adcad19d4bc57b88
 cryptomount -u $crypto_uuid
 set root=crypto0
-set prefix=($root)/root/boot/grub
+set prefix=($root)/root/harden/boot/grub
 insmod normal
 normal"))
                   (target-esp (if (file-exists? (string-append mount-point efi-dir))
