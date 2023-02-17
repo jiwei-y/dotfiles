@@ -94,41 +94,41 @@
                  %base-packages))
     `(,@my-base-packages)))
 
-; (define install-grub-efi-mkimage
-;   ;; "Create an Grub EFI image with included cryptomount support for luks2,
-; ;; which grub-install does not handle yet."
-;   #~(lambda (bootloader efi-dir mount-point)
-;         (when efi-dir
-;             (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
-;                   ;; Required modules, YMMV.
-;                   (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
-;                   (prefix (string-append mount-point "/boot/grub"))
-;                   ;; Different configuration required to set up a crypto
-;                   ;; device. Change crypto_uuid to match your output of
-;                   ;; `cryptsetup luksUUID /device`.
-;                   ;; XXX: Maybe cryptomount -a could work?
-;                   (config #$(plain-file "grub.cfg" "set crypto_uuid=3758ac97d5214d80adcad19d4bc57b88
-; cryptomount -u $crypto_uuid
-; set root=crypto0
-; set prefix=($root)/boot/grub
-; insmod normal
-; normal"))
-;                   (target-esp (if (file-exists? (string-append mount-point efi-dir))
-;                                   (string-append mount-point efi-dir)
-;                                   efi-dir)))
-;               (apply invoke (append
-;                              (list
-;                                grub-mkimage
-;                               "-p" prefix
-;                               "-O" "x86_64-efi"
-;                               "-c" config
-;                               "-o" (string-append target-esp "/EFI/Guix/grubx64.efi"))
-;                              modules))))))
-; (define grub-efi-bootloader-luks2
-;   (bootloader
-;     (inherit grub-efi-bootloader)
-;     (name 'grub-efi-luks2)
-;     (installer install-grub-efi-mkimage)))
+(define install-grub-efi-mkimage
+  ;; "Create an Grub EFI image with included cryptomount support for luks2,
+;; which grub-install does not handle yet."
+  #~(lambda (bootloader efi-dir mount-point)
+        (when efi-dir
+            (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
+                  ;; Required modules, YMMV.
+                  (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
+                  (prefix (string-append mount-point "/boot/grub"))
+                  ;; Different configuration required to set up a crypto
+                  ;; device. Change crypto_uuid to match your output of
+                  ;; `cryptsetup luksUUID /device`.
+                  ;; XXX: Maybe cryptomount -a could work?
+                  (config #$(plain-file "grub.cfg" "set crypto_uuid=3758ac97d5214d80adcad19d4bc57b88
+cryptomount -u $crypto_uuid
+set root=crypto0
+set prefix=($root)/boot/grub
+insmod normal
+normal"))
+                  (target-esp (if (file-exists? (string-append mount-point efi-dir))
+                                  (string-append mount-point efi-dir)
+                                  efi-dir)))
+              (apply invoke (append
+                             (list
+                               grub-mkimage
+                              "-p" prefix
+                              "-O" "x86_64-efi"
+                              "-c" config
+                              "-o" (string-append target-esp "/EFI/Guix/grubx64.efi"))
+                             modules))))))
+(define grub-efi-bootloader-luks2
+  (bootloader
+    (inherit grub-efi-bootloader)
+    (name 'grub-efi-luks2)
+    (installer install-grub-efi-mkimage)))
 
 (operating-system
   (locale "en_US.utf8")
@@ -236,16 +236,16 @@
   (firmware (list linux-firmware))
   ;; Use the UEFI variant of GRUB with the EFI System
   ;; Partition mounted on /boot/efi.
-;   (bootloader (bootloader-configuration
-;                 (bootloader grub-efi-bootloader-luks2)
-;                 (targets '("/boot/efi"))
-;                 (timeout 30)
-;                 (keyboard-layout keyboard-layout)))
   (bootloader (bootloader-configuration
-                (bootloader grub-efi-luks2-bootloader)
+                (bootloader grub-efi-bootloader-luks2)
                 (targets '("/boot/efi"))
                 (timeout 30)
                 (keyboard-layout keyboard-layout)))
+;   (bootloader (bootloader-configuration
+;                 (bootloader grub-efi-luks2-bootloader)
+;                 (targets '("/boot/efi"))
+;                 (timeout 30)
+;                 (keyboard-layout keyboard-layout)))
 
   ;; Specify a mapped device for the encrypted root partition.
   ;; The UUID is that returned by 'cryptsetup luksUUID'.
