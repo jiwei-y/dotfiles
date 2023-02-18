@@ -162,14 +162,14 @@ normal"))
                       (service cups-service-type
                         (cups-configuration
                           (web-interface? #t)))
-                      (service openssh-service-type)
-                      (service libvirt-service-type
-                                (libvirt-configuration
-                                  (unix-sock-group "libvirt")
-                                  ; (log-filters "1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util ")
-                                  ; (log-outputs "1:file:/var/log/libvirt/libvirtd.log")
-                                ))
-                      (service virtlog-service-type)
+;                      (service openssh-service-type)
+;                      (service libvirt-service-type
+;                                (libvirt-configuration
+;                                  (unix-sock-group "libvirt")
+;                                  ; (log-filters "1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util ")
+;                                  ; (log-outputs "1:file:/var/log/libvirt/libvirtd.log")
+;                                ))
+;                      (service virtlog-service-type)
                       (service gnome-desktop-service-type)
                       (simple-service 'ratbagd dbus-root-service-type (list libratbag)) ; for piper
                       ; (service usbguard-service-type)
@@ -179,9 +179,11 @@ normal"))
                           (cpu-scaling-governor-on-ac (list "performance"))
                           (cpu-scaling-governor-on-bat (list "powersave"))
                           (cpu-boost-on-ac? #t)
-                          (disk-iosched (list "mq-deadline"))
-                          (sound-power-save-on-ac 1)
-                          (runtime-pm-on-ac "auto")))
+                          (disk-iosched (list "nvme0n1" "nvme1n1"))
+                          (disk-iosched (list "mq-deadline" "mq-deadline"))
+                          ;(sound-power-save-on-ac 1)
+                          ;(runtime-pm-on-ac "auto")
+                        ))
                       (simple-service 
                         'custom-udev-rules udev-service-type 
                         (list lkrg-my))
