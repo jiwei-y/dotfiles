@@ -6,6 +6,7 @@
   (gnu packages admin) ; for smartmontools
   (gnu packages linux) ; for fstrim
   (gnu packages ntp)
+  (gnu packages version-control) ; for git
   (guix channels) ; for avoiding kernel recompilation
   (guix download) ;for url-fetch (udev rule)
   (guix inferior) ; for avoiding kernel recompilation

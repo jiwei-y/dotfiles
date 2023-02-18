@@ -23,7 +23,7 @@ guix refresh -m ~/misc/dotfiles/manifest.scm
 sudo guix system reconfigure ~/misc/dotfiles/system/config.scm
 
 ## home configuration import
-guix home import ~/misc/dotfiles/test/home
+guix home import ~/misc/test/home
 
 ## home reconfigure
 guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
