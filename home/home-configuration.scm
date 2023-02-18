@@ -15,15 +15,11 @@
 (home-environment
   ;; Below is the list of packages that will show up in your
   ;; Home profile, under ~/.guix-home/profile.
-  (packages (specifications->packages (list ;"piper"
-                                       "qv2ray"
-                                       ;"remmina"
+  (packages (specifications->packages (list "qv2ray"
                                        "solaar"
                                        "cpupower"
-                                       ;"gnome-shell-extension-gsconnect"
                                        "gnome-tweaks"
                                        "virt-manager"
-                                       ;"gimp"
                                        "lyx"
                                        "dconf-editor"
                                        "xdg-desktop-portal-gtk"
@@ -35,7 +31,6 @@
                                        "ibus"
                                        "flatpak"
                                        "openconnect-sso"
-                                       ;"gnome-shell-extension-appindicator"
                                        "btrfs-progs"
                                        "mesa-utils"
                                        "git"
@@ -69,7 +64,6 @@
                                        "font-my-noto-sans-cjk"
                                        "font-my-noto-core"
                                        "p7zip"
-                                       ;"gnome-shell-extension-customize-ibus"
                                        "looking-glass-client")))
 
   ;; Below is the list of Home services.  To search for available
