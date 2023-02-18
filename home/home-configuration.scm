@@ -15,15 +15,15 @@
 (home-environment
   ;; Below is the list of packages that will show up in your
   ;; Home profile, under ~/.guix-home/profile.
-  (packages (specifications->packages (list "piper"
+  (packages (specifications->packages (list ;"piper"
                                        "qv2ray"
-                                       "remmina"
+                                       ;"remmina"
                                        "solaar"
                                        "cpupower"
                                        ;"gnome-shell-extension-gsconnect"
                                        "gnome-tweaks"
                                        "virt-manager"
-                                       "gimp"
+                                       ;"gimp"
                                        "lyx"
                                        "dconf-editor"
                                        "xdg-desktop-portal-gtk"
@@ -61,7 +61,7 @@
                                        "cryptsetup"
                                        "ntfs-3g"
                                        "kconfig-hardened-check"
-                                       "texlive-fontspec"
+                                       ;"texlive-fontspec"
                                        "unzip"
                                        "font-my-noto-emoji"
                                        "font-my-noto-serif-cjk"
