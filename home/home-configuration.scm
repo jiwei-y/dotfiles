@@ -83,9 +83,9 @@
                                               ("sudo" . "sudo -v; sudo ")))
                                   (bashrc
                                     (list (local-file
-                                            ;"/home/jiwei/misc/dotfiles/home/.bashrc"
-                                            "/home/jiwei/.bashrc")))
+                                            "/home/jiwei/misc/dotfiles/home/.bashrc"
+                                            "bashrc")))
                                   (bash-profile
                                     (list (local-file
                                             "/home/jiwei/misc/dotfiles/home/.bash_profile"
-                                            "/home/jiwei/.bash_profile")))))))))
+                                            "bash_profile")))))))))
