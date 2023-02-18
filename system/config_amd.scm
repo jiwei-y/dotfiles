@@ -298,16 +298,6 @@ normal"))
           (target "cryptroot1")
           (type luks-device-mapping))))
 
-    (file-systems (let
-        ( )
-        (define mount1 (file-system
-            (mount-point "/rw")
-            (type "ext4")
-            (device (uuid "d1fecab6-998a-4ae7-8a9f-21c3501b1371"))
-            (options "data=ordered")
-            (flags '(no-atime))
-            (needed-for-boot? #t)
-    ))
   (file-systems (let ((define subvol-root 
                         (file-system
                           (device "/dev/mapper/cryptroot0")
