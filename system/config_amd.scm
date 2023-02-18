@@ -298,7 +298,7 @@ normal"))
           (target "cryptroot1")
           (type luks-device-mapping))))
 
-  (file-systems (let ((define subvol-root 
+  (file-systems (let ((subvol-root 
                         (file-system
                           (device "/dev/mapper/cryptroot0")
                           (mount-point "/")
@@ -307,7 +307,7 @@ normal"))
                           (options "subvol=root,compress=zstd,ssd,discard=async")
                           (needed-for-boot? #t)
                           (dependencies mapped-devices)))
-                      (define subvol-gnu-store 
+                      (subvol-gnu-store 
                         (file-system
                           (device "/dev/mapper/cryptroot0")
                           (mount-point "/gnu/store")
