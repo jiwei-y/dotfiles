@@ -22,6 +22,9 @@ export GDK_BACKEND=wayland,x11
 export QT_QPA_PLATFORMTHEME=gnome
 export QT_QPA_PLATFORM=wayland;xcb
 
+# git
+export GIT_EXEC_PATH=/home/jiwei/.guix-home/profile/libexec/git-core
+
 # theme
 export QT_STYLE_OVERRIDE=kvantum
 
