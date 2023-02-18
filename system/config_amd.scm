@@ -39,39 +39,6 @@
 
 (use-package-modules certs gnome firmware samba)
 
-
-
-
-(define (linux-urls version)
-  "Return a list of URLS for Linux VERSION."
-  (list (string-append "https://www.kernel.org/pub/linux/kernel/v"
-                       (version-major version) ".x/linux-" version ".tar.xz")))
-
-(define* (corrupt-linux freedo #:key (name "linux"))
-  (package
-   (inherit
-    (customize-linux
-     #:name name
-     #:source (origin (inherit (package-source freedo))
-                      (method url-fetch)
-                      (uri (linux-urls (package-version freedo)))
-                      (patches '()))
-     #:configs (list "CONFIG_MT7921E=m")))
-   (version (package-version freedo))
-   (home-page "https://www.kernel.org/")
-   (synopsis "Linux kernel with nonfree binary blobs included")
-   (description
-    "The unmodified Linux kernel, including nonfree blobs, for running Guix
-System on hardware which requires nonfree software to function.")))
-
-(define-public linux-6.1
-  (corrupt-linux linux-libre-6.1))
-
-(define-public linux linux-6.1)
-
-
-
-
 ;; Utils
 
 (define (pkgs . specs)
@@ -113,12 +80,12 @@ System on hardware which requires nonfree software to function.")))
     "https://substitutes.guix.psychnotebook.org" ;guix-science
   ))
 (define %my-substitute-pubs
-  (list ; (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.nonguix.org.pub")
-        ; (local-file "/home/jiwei/misc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
-        ; (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
-        (local-file "/etc/dotfiles/channels/substitutes.nonguix.org.pub")
-        (local-file "/etc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
-        (local-file "/etc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+  (list (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.nonguix.org.pub")
+        (local-file "/home/jiwei/misc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+        ; (local-file "/etc/dotfiles/channels/substitutes.nonguix.org.pub")
+        ; (local-file "/etc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        ; (local-file "/etc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
       ))
 
 (define %final-pure-packages
@@ -215,23 +182,17 @@ normal"))
                           (disk-iosched (list "mq-deadline"))
                           (sound-power-save-on-ac 1)
                           (runtime-pm-on-ac "auto")))
-;                       (simple-service 
-;                         'custom-udev-rules udev-service-type 
-;                         (list lkrg-my))
-;                       (service kernel-module-loader-service-type
-;                               '("lkrg"))
-;                       (simple-service 'lkrg-config etc-service-type
-;                                       (list `("modprobe.d/lkrg.conf"
-;                                               ,lkrg-config)))
+                      (simple-service 
+                        'custom-udev-rules udev-service-type 
+                        (list lkrg-my))
+                      (service kernel-module-loader-service-type
+                              '("lkrg"))
+                      (simple-service 'lkrg-config etc-service-type
+                                      (list `("modprobe.d/lkrg.conf"
+                                              ,lkrg-config)))
                       (modify-services %desktop-services
                           (delete modem-manager-service-type)
                           (delete ntp-service-type)
-;                           (ntp-service-type
-;                             config => (ntp-configuration
-;                                         (inherit config)
-;                                         (servers %my-ntp-servers)
-;                                         (allow-large-adjustment? #f)
-;                                         (ntp ntp)))
                           (network-manager-service-type
                             config => (network-manager-configuration
                                       (inherit config)
@@ -257,7 +218,7 @@ normal"))
                                                (settings (append %kicksecure-sysctl-rules
                                                                  %default-sysctl-settings))))))))
   (kernel linux-xanmod-hardened)
-  ; (kernel-loadable-modules (list lkrg-my))
+  (kernel-loadable-modules (list lkrg-my))
   (initrd microcode-initrd)
   (initrd-modules
     (cons* "nvme"
@@ -325,8 +286,6 @@ normal"))
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                             (flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,discard=async")
-                            (needed-for-boot? #t)
-                            (check? #f)
                             (dependencies (list subvol-root)))
                           (file-system
                             (device "/harden/var/log")
@@ -335,18 +294,14 @@ normal"))
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                             (flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,discard=async")
-                            (needed-for-boot? #t)
-                            (check? #f)
                             (dependencies (list subvol-root)))
                           (file-system
-                            (device "/harden/tmp")
+                            (device "/harden/tmp")          ; NOTE: The permission of this folder should be drwxrwxrwt
                             (mount-point "/tmp")
                             (type "none")
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                             (flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,discard=async")
-                            (needed-for-boot? #t)
-                            (check? #f)
                             (dependencies (list subvol-root)))
                           (file-system
                             (device "/harden/home")
@@ -356,8 +311,6 @@ normal"))
                             ;(flags '(no-atime no-suid no-dev bind-mount))
                             (flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,discard=async")
-                            (needed-for-boot? #t)
-                            (check? #f)
                             (dependencies (list subvol-root)))
                           (file-system
                             (device "/harden/boot")
@@ -366,8 +319,6 @@ normal"))
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                             (flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,discard=async")
-                            (needed-for-boot? #t)
-                            (check? #f)
                             (dependencies (list subvol-root)))
                           (file-system
                             (device (uuid "3E3D-CF51" 'fat32))
