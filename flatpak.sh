@@ -1,6 +1,6 @@
 ## font
-cp -rP ~/.guix-profile/share/fonts/opentype/* ~/.local/share/fonts --remove-destination
-cp -rP ~/.guix-profile/share/fonts/truetype/* ~/.local/share/fonts --remove-destination
+cp -rP ~/.guix-home/profile/share/fonts/opentype/* ~/.local/share/fonts --remove-destination
+cp -rP ~/.guix-home/profile/share/fonts/truetype/* ~/.local/share/fonts --remove-destination
 rm -f ~/.local/share/fonts/fonts.dir ~/.local/share/fonts/fonts.scale
 readlink ~/.local/share/fonts/NotoColorEmoji.ttf    # fonts-dir
 readlink -f ~/.local/share/fonts/NotoSans-Black.ttf # font-my-noto-core

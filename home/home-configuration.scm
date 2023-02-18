@@ -56,6 +56,7 @@
                                        "r-zoo"
                                        "r-plm"
                                        "orchis-theme"
+                                       "kvantum"
                                        "compsize"
                                        "gdb"
                                        "cryptsetup"

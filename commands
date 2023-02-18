@@ -29,7 +29,7 @@ guix home import ~/misc/test/home
 guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
 
 ## combination
-guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix upgrade && guix home reconfigure /home/jiwei/dotfiles/home/home-configuration.scm
+guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix upgrade && guix home reconfigure /home/jiwei/misc/dotfiles/home/home-configuration.scm
 
 ## solve problems of fonts and cursors in flatpak
 sh ~/misc/dotfiles/flatpak.sh
@@ -60,13 +60,8 @@ guix build onedrive -f ~/misc/dotfiles/test/sync/sync.scm -L ~/misc/dotfiles/tes
 ## qv2ray problems with wayland
 QT_QPA_PLATFORM=xcb qv2ray
 
-## nautilus problem
-NAUTILUS_EXTENSION_PATH=/run/current-system/profile/lib/nautilus/site-extensions nautilus
-
 ## before sleep
 sh ~/misc/dotfiles/suspend.sh
 
 ## afrer resume
 sudo herd restart kernel-module-loader
-
-guix pull -C ~/Downloads/channels.scm
