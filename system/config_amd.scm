@@ -4,6 +4,7 @@
   (gnu services mcron) ; for crontab
   (gnu services sysctl) ; for sysctl service
   (gnu packages admin) ; for smartmontools
+  (gnu packages ibus)
   (gnu packages linux) ; for fstrim
   (gnu packages ntp)
   (gnu packages version-control) ; for git
