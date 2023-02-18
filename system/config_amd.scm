@@ -112,18 +112,18 @@ System on hardware which requires nonfree software to function.")))
     "https://substitutes.guix.psychnotebook.org" ;guix-science
   ))
 (define %my-substitute-pubs
-  (list (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.nonguix.org.pub")
-        (local-file "/home/jiwei/misc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
-        (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
-        ; (local-file "dotfiles/channels/substitutes.nonguix.org.pub")
-        ; (local-file "dotfiles/channels/guix.bordeaux.inria.fr.pub")
-        ; (local-file "dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+  (list ; (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.nonguix.org.pub")
+        ; (local-file "/home/jiwei/misc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        ; (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+        (local-file "/etc/dotfiles/channels/substitutes.nonguix.org.pub")
+        (local-file "/etc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        (local-file "/etc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
       ))
 
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools
+          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools git
                  %base-packages))
     `(,@my-base-packages)))
 
@@ -255,8 +255,7 @@ normal"))
                                                (inherit config)
                                                (settings (append %kicksecure-sysctl-rules
                                                                  %default-sysctl-settings))))))))
-  ; (kernel linux-xanmod-hardened)
-  (kernel linux)
+  (kernel linux-xanmod-hardened)
   ; (kernel-loadable-modules (list lkrg-my))
   (initrd microcode-initrd)
   (initrd-modules
@@ -321,6 +320,7 @@ normal"))
                          ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                          (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
+                         (needed-for-boot? #t)
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/var/log")
@@ -329,6 +329,7 @@ normal"))
                          ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                          (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
+                         (needed-for-boot? #t)
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/tmp")
@@ -337,6 +338,7 @@ normal"))
                          ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                          (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
+                         (needed-for-boot? #t)
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/home")
@@ -346,6 +348,7 @@ normal"))
                          ;(flags '(no-atime no-suid no-dev bind-mount))
                          (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
+                         (needed-for-boot? #t)
                          (dependencies mapped-devices))
                        (file-system
                          (device "/harden/boot")
@@ -354,6 +357,7 @@ normal"))
                          ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
                          (flags '(no-atime bind-mount))
                          (options "compress=zstd,ssd,discard=async")
+                         (needed-for-boot? #t)
                          (dependencies mapped-devices))
                        (file-system
                          (device (uuid "3E3D-CF51" 'fat32))
