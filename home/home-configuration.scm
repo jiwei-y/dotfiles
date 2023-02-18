@@ -61,7 +61,7 @@
                                        "cryptsetup"
                                        "ntfs-3g"
                                        "kconfig-hardened-check"
-                                       ;"texlive-fontspec"
+                                       "texlive-fontspec"
                                        "unzip"
                                        "font-my-noto-emoji"
                                        "font-my-noto-serif-cjk"

@@ -1,0 +1,13 @@
+app.drey.Warp
+com.brave.Browser
+com.github.jeromerobert.pdfarranger
+com.github.tchx84.Flatseal
+com.mattjakeman.ExtensionManager
+com.spotify.Client
+com.usebottles.bottles
+com.vscodium.codium
+io.gitlab.librewolf-community
+org.libreoffice.LibreOffice
+org.telegram.desktop
+org.zotero.Zotero
+us.zoom.Zoom
