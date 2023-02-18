@@ -84,8 +84,8 @@
                                   (bashrc
                                     (list (local-file
                                             ;"/home/jiwei/misc/dotfiles/home/.bashrc"
-                                            "bashrc")))
+                                            "/home/jiwei/.bashrc")))
                                   (bash-profile
                                     (list (local-file
                                             "/home/jiwei/misc/dotfiles/home/.bash_profile"
-                                            "bash_profile")))))))))
+                                            "/home/jiwei/.bash_profile")))))))))
