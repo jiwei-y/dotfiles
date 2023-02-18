@@ -2,12 +2,8 @@
 . ~/.profile
 
 # for gnome to find guix binaries
-GUIX_PROFILE="/home/jiwei/.guix-profile"
+export GUIX_PROFILE="/home/jiwei/.guix-profile"
 . "$GUIX_PROFILE/etc/profile"
-
-# for gnome to find flatpak binaries
-XDG_DATA_DIRS=$XDG_DATA_DIRS:/var/lib/flatpak/exports/share
-XDG_DATA_DIRS=$XDG_DATA_DIRS:/home/jiwei/.local/share/flatpak/exports/share
 
 # ibus-rime
 export GTK_IM_MODULE="ibus"
