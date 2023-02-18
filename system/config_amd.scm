@@ -92,6 +92,7 @@
   (let ()
     (define my-base-packages
           (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools git
+                 ibus ibus-rime dconf
                  %base-packages))
     `(,@my-base-packages)))
 
