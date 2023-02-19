@@ -305,8 +305,8 @@ normal"))
                             (device "/harden/tmp")          ; NOTE: The permission of this folder should be drwxrwxrwt
                             (mount-point "/tmp")
                             (type "none")
-                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
-                            (flags '(no-atime bind-mount))
+                            (flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            ;(flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,degraded,discard=async")
                             (dependencies (list subvol-gnu-store)))
                           (file-system
@@ -314,8 +314,8 @@ normal"))
                             (mount-point "/home")
                             (type "none")
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
-                            ;(flags '(no-atime no-suid no-dev bind-mount))
-                            (flags '(no-atime bind-mount))
+                            (flags '(no-atime no-suid bind-mount))
+                            ;(flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,degraded,discard=async")
                             (dependencies (list subvol-gnu-store)))
                           (file-system
@@ -343,6 +343,10 @@ normal"))
   (kernel-arguments
     (append (cons*; ;; for hibernation
                     "resume=/dev/mapper/cryptswap"
+                    ;; set default suspend mode to s3 to save power, not supported on code01
+                    "mem_sleep_default=deep"
+                    ;; reduce power consumption in s2idle
+                    "nvme.noacpi=1"
 
                     ;; for pci passthrough
                     "intel_iommu=on"
