@@ -4,7 +4,6 @@
   (gnu services mcron) ; for crontab
   (gnu services sysctl) ; for sysctl service
   (gnu packages admin) ; for smartmontools
-  (gnu packages ibus)
   (gnu packages linux) ; for fstrim
   (gnu packages ntp)
   (gnu packages version-control) ; for git
@@ -38,7 +37,7 @@
  pm
 )
 
-(use-package-modules certs gnome firmware samba)
+(use-package-modules certs curl gnome firmware ibus samba)
 
 ;; Utils
 
@@ -92,8 +91,8 @@
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools git
-                 ibus ibus-rime rime-data
+          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools fwupd
+                 git curl ibus ibus-rime
                  %base-packages))
     `(,@my-base-packages)))
 
@@ -181,10 +180,13 @@ normal"))
                           (cpu-scaling-governor-on-ac (list "performance"))
                           (cpu-scaling-governor-on-bat (list "powersave"))
                           (cpu-boost-on-ac? #t)
+                          (cpu-boost-on-bat? #f)
                           (disks-devices (list "nvme0n1" "nvme1n1"))
-                          (disk-iosched (list "mq-deadline" "mq-deadline"))
-                          ;(sound-power-save-on-ac 1)
-                          ;(runtime-pm-on-ac "auto")
+                          (disk-iosched (list "none" "none"))     ;; https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/monitoring_and_managing_system_status_and_performance/setting-the-disk-scheduler_monitoring-and-managing-system-status-and-performance#the-default-disk-scheduler_setting-the-disk-scheduler
+                          (pcie-aspm-on-ac "default")         ;; https://linrunner.de/tlp/settings/runtimepm.html#pcie-aspm-on-ac-bat
+                          (pcie-aspm-on-bat "powersupersave")
+                          (runtime-pm-on-ac "auto")
+                          (sound-power-save-on-ac 1)      ;; https://linrunner.de/tlp/settings/audio.html#sound-power-save-on-ac-bat
                         ))
                       (simple-service 
                         'custom-udev-rules udev-service-type 
