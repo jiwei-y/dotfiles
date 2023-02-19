@@ -29,7 +29,7 @@ guix home import ~/misc/test/home
 guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
 
 ## combination
-guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix upgrade && guix home reconfigure /home/jiwei/misc/dotfiles/home/home-configuration.scm
+guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix home reconfigure /home/jiwei/misc/dotfiles/home/home-configuration.scm
 
 ## solve problems of fonts and cursors in flatpak
 sh ~/misc/dotfiles/flatpak.sh
@@ -46,6 +46,10 @@ sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //100.9
 sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //100.92.235.166/onedrive-personal/ /home/jiwei/onedrive-personal/ -vv
 sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //192.168.122.206/onedrive-csvihet/ /home/jiwei/onedrive-csvihet/ -vv
 sudo mount -t cifs -o credentials=/home/jiwei/.smbcreds,uid=1000,gid=998 //192.168.122.206/onedrive-personal/ /home/jiwei/onedrive-personal/ -vv
+
+## initialize ibus-rime
+rm -rf ~/.cache/ibus/bus
+rm -rf ~/.config/ibus/bus
 
 ## stata
 guix shell -CNF -u user --no-cwd --share=$HOME/GAIA --share=$HOME/.stata17 --share=$HOME/ado --preserve='^DISPLAY$' gtk+ coreutils gzip tar findutils gcc@12:lib ncurses-with-tinfo@5 zlib libtiff libxml2 libxtst hicolor-icon-theme font-my-noto-core font-my-noto-emoji font-my-noto-sans-cjk font-my-noto-serif-cjk gnome-themes-extra murrine orchis-theme
