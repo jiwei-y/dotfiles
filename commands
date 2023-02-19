@@ -1,17 +1,17 @@
-## start swap
-sudo herd restart swap-/swap/swapfile
+## suspend
+loginctl suspend-then-hibernate
+
+## before suspend (old machine)
+sh ~/misc/dotfiles/suspend.sh
+
+## afrer resume
+sudo herd restart kernel-module-loader
 
 ## Use http proxy for "guix pull"
 https_proxy=http://127.0.0.1:10809 guix pull --substitute-urls='https://mirror.sjtu.edu.cn/guix/'
 
 ## Use http proxy for guix-daemon
 sudo herd set-http-proxy guix-daemon http://127.0.0.1:10809
-
-## View globally installed packages
-guix package --list-installed --profile=/run/current-system/profile
-
-## export manifest of installed packages
-guix package --export-manifest
 
 ## refresh cran packages in my channel
 guix refresh -t cran -m ~/misc/dotfiles/manifest.scm
@@ -66,9 +66,3 @@ guix build onedrive -f ~/misc/dotfiles/test/sync/sync.scm -L ~/misc/dotfiles/tes
 
 ## qv2ray problems with wayland
 QT_QPA_PLATFORM=xcb qv2ray
-
-## before sleep
-sh ~/misc/dotfiles/suspend.sh
-
-## afrer resume
-sudo herd restart kernel-module-loader
