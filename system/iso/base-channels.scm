@@ -1,7 +1,8 @@
 (cons* 
         (channel
-          (inherit %default-guix-channel))
-          ; (url "https://git.sjtu.edu.cn/sjtug/guix.git"))
+          (name 'mychannel)
+          (url "https://github.com/jiwei-y/mychannel")
+          (branch "master"))
         (channel
           (name 'nonguix)
           (url "https://gitlab.com/nonguix/nonguix")
@@ -20,9 +21,12 @@
               (openpgp-fingerprint
                 "CA4F 8CF4 37D7 478F DA05  5FD4 4213 7701 1A37 8446"))))
         (channel
-          (name 'mychannel)
-          (url "https://github.com/jiwei-y/mychannel")
-          (branch "master"))
+          (name 'guix-cran)
+          (url "https://github.com/guix-science/guix-cran.git"))
+;        (channel
+;          (inherit %default-guix-channel))
+;          (url "https://git.sjtu.edu.cn/sjtug/guix.git"))
+
         ; (channel
           ; (name 'pantherx-extra)
           ; (url "https://channels.pantherx.org/pantherx-extra.git")

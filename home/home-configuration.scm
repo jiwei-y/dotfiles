@@ -27,12 +27,12 @@
                                        "rstudio"
                                        "network-manager-openconnect"
                                        "gnome-power-manager"
+                                       "rime-data"
                                        "ibus-rime"
                                        "ibus"
                                        "flatpak"
                                        "openconnect-sso"
                                        "btrfs-progs"
-                                       "mesa-utils"
                                        "git"
                                        "materia-theme"
                                        "fontconfig"
@@ -64,7 +64,8 @@
                                        "font-my-noto-sans-cjk"
                                        "font-my-noto-core"
                                        "p7zip"
-                                       "looking-glass-client")))
+                                       ;"looking-glass-client"
+                                      )))
 
   ;; Below is the list of Home services.  To search for available
   ;; services, run 'guix home search KEYWORD' in a terminal.

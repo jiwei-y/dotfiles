@@ -4,8 +4,10 @@
   (gnu services mcron) ; for crontab
   (gnu services sysctl) ; for sysctl service
   (gnu packages admin) ; for smartmontools
+  (gnu packages ibus)
   (gnu packages linux) ; for fstrim
   (gnu packages ntp)
+  (gnu packages version-control) ; for git
   (guix channels) ; for avoiding kernel recompilation
   (guix download) ;for url-fetch (udev rule)
   (guix inferior) ; for avoiding kernel recompilation
@@ -15,6 +17,7 @@
   (guix utils)
   (nongnu packages linux) ; this and next for nongnu linux
   (nongnu system linux-initrd)
+  (me bootloader grub)
   (me packages file-systems)  ; snapper
   (me packages linux) ; xanmod
   (me packages nvidia)
@@ -70,37 +73,6 @@
   (plain-file "lkrg.conf"
               "options lkrg hide=1 umh_enforce=0"))
 
-(define tuxedo-config
-  (plain-file "tuxedo_keyboard.conf"
-              "options tuxedo_keyboard mode=0 brightness=0 color_left=0xFFFFFF color_center=0xFFFFFF color_right=0xFFFFFF"))
-
-(define %my-ntp-servers
-  ;; Default set of NTP servers. These URLs are managed by the NTP Pool project.
-  ;; Within Guix, Leo Famulari <leo@famulari.name> is the administrative contact
-  ;; for this NTP pool "zone".
-  ;; The full list of available URLs are 0.guix.pool.ntp.org,
-  ;; 1.guix.pool.ntp.org, 2.guix.pool.ntp.org, and 3.guix.pool.ntp.org.
-  (list
-   (ntp-server
-    (address "time.cloudflare.com")
-    (options `(iburst (minpoll 6) (maxpoll 9))))
-   (ntp-server
-    (address "nts.ntp.se")
-    (options `(iburst (minpoll 6) (maxpoll 9))))
-   (ntp-server
-    (type 'pool)
-    (address "0.us.pool.ntp.mil")
-    (options `(iburst (minpoll 6) (maxpoll 9))))
-   (ntp-server
-    (address "tick.usno.navy.mil")
-    (options `(iburst (minpoll 6) (maxpoll 9))))
-   (ntp-server
-    (address "tock.usno.navy.mil")
-    (options `(iburst (minpoll 6) (maxpoll 9))))
-   (ntp-server
-    (address "time.nist.gov")
-    (options `(iburst (minpoll 6) (maxpoll 9))))))
-
 (define %my-substitute-urls
   '(; "https://mirrors.sjtug.sjtu.edu.cn/guix"
     ; "https://mirror.sjtu.edu.cn/guix" ;Slow
@@ -109,21 +81,62 @@
     "https://substitutes.guix.psychnotebook.org" ;guix-science
   ))
 (define %my-substitute-pubs
-  (list (local-file "/home/jiwei/dotfiles/channels/substitutes.nonguix.org.pub")
-        (local-file "/home/jiwei/dotfiles/channels/guix.bordeaux.inria.fr.pub")
-        (local-file "/home/jiwei/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")))
+  (list (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.nonguix.org.pub")
+        (local-file "/home/jiwei/misc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        (local-file "/home/jiwei/misc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+        ; (local-file "/etc/dotfiles/channels/substitutes.nonguix.org.pub")
+        ; (local-file "/etc/dotfiles/channels/guix.bordeaux.inria.fr.pub")
+        ; (local-file "/etc/dotfiles/channels/substitutes.guix.psychnotebook.org.pub")
+      ))
 
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools
+          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools git
+                 ibus ibus-rime rime-data
                  %base-packages))
     `(,@my-base-packages)))
+
+(define install-grub-efi-mkimage
+  ;; "Create an Grub EFI image with included cryptomount support for luks2,
+;; which grub-install does not handle yet."
+  #~(lambda (bootloader efi-dir mount-point)
+        (when efi-dir
+            (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
+                  ;; Required modules, YMMV.
+                  (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
+                  (prefix (string-append mount-point "/root/harden/boot/grub"))  ; btrfs subvol root
+                  ;; Different configuration required to set up a crypto
+                  ;; device. Change crypto_uuid to match your output of
+                  ;; `cryptsetup luksUUID /device`.
+                  ;; XXX: Maybe cryptomount -a could work?
+                  (config #$(plain-file "grub.cfg" "set crypto_uuid=3758ac97d5214d80adcad19d4bc57b88
+cryptomount -u $crypto_uuid
+set root=crypto0
+set prefix=($root)/root/harden/boot/grub
+insmod normal
+normal"))
+                  (target-esp (if (file-exists? (string-append mount-point efi-dir))
+                                  (string-append mount-point efi-dir)
+                                  efi-dir)))
+              (apply invoke (append
+                             (list
+                               grub-mkimage
+                              "-p" prefix
+                              "-O" "x86_64-efi"
+                              "-c" config
+                              "-o" (string-append target-esp "/EFI/Guix/grubx64.efi"))
+                             modules))))))
+(define grub-efi-bootloader-luks2
+  (bootloader
+    (inherit grub-efi-bootloader)
+    (name 'grub-efi-luks2)
+    (installer install-grub-efi-mkimage)))
 
 (operating-system
   (locale "en_US.utf8")
   (timezone "Australia/Brisbane") ;Asia/Taipei
-  (keyboard-layout (keyboard-layout "ca"))
+  (keyboard-layout (keyboard-layout "us" "altgr-intl"))
   (host-name "MAGI-Achiral")
   (users (cons* (user-account
                   (name "jiwei")
@@ -131,7 +144,7 @@
                   (group "users")
                   (home-directory "/home/jiwei")
                   (supplementary-groups
-                    '("wheel" "netdev" "audio" "video" "kvm" "libvirt")))
+                    '("wheel" "netdev" "audio" "video")))     ; "kvm" "libvirt"
                 %base-user-accounts))
   (packages %final-pure-packages)
   (services (append (system-pipewire-services)
@@ -151,49 +164,39 @@
                       (service cups-service-type
                         (cups-configuration
                           (web-interface? #t)))
-                      (service openssh-service-type)
-                      (service libvirt-service-type
-                                (libvirt-configuration
-                                  (unix-sock-group "libvirt")
-                                  ; (log-filters "1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util ")
-                                  ; (log-outputs "1:file:/var/log/libvirt/libvirtd.log")
-                                ))
-                      (service virtlog-service-type)
+;                      (service openssh-service-type)
+;                      (service libvirt-service-type
+;                                (libvirt-configuration
+;                                  (unix-sock-group "libvirt")
+;                                  ; (log-filters "1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util ")
+;                                  ; (log-outputs "1:file:/var/log/libvirt/libvirtd.log")
+;                                ))
+;                      (service virtlog-service-type)
                       (service gnome-desktop-service-type)
                       (simple-service 'ratbagd dbus-root-service-type (list libratbag)) ; for piper
-                      (service usbguard-service-type)
+                      ; (service usbguard-service-type)
                       (service chronyd-service-type)
                       (service tlp-service-type
                         (tlp-configuration
                           (cpu-scaling-governor-on-ac (list "performance"))
                           (cpu-scaling-governor-on-bat (list "powersave"))
                           (cpu-boost-on-ac? #t)
-                          (disk-iosched (list "mq-deadline"))
-                          (sound-power-save-on-ac 1)
-                          (runtime-pm-on-ac "auto")
-                          ; (runtime-pm-blacklist '("00:14.0"))
-                          ; (runtime-pm-blacklist '("00:14.0" "01:00.2" "00:00.0" "00:01.0" "00:02.0" "00:12.0" "00:14.0" "00:14.2" "00:14.3" "00:15.0" "00:15.1" "00:16.0" "00:17.0" "00:1b.0" "00:1d.0" "00:1d.6" "00:1f.0" "00:1f.3" "00:1f.4" "00:1f.5" "06:00.0" "07:00.0" "08:00.0" "08:00.1"))
-                          ; (runtime-pm-driver-blacklist '("mei_me"))
+                          (disks-devices (list "nvme0n1" "nvme1n1"))
+                          (disk-iosched (list "mq-deadline" "mq-deadline"))
+                          ;(sound-power-save-on-ac 1)
+                          ;(runtime-pm-on-ac "auto")
                         ))
                       (simple-service 
                         'custom-udev-rules udev-service-type 
-                        (list lkrg-my tuxedo-keyboard))
+                        (list lkrg-my))
                       (service kernel-module-loader-service-type
-                              '("lkrg" "tuxedo_keyboard"))
-                      (simple-service 'tuxedo-config etc-service-type
+                              '("lkrg"))
+                      (simple-service 'lkrg-config etc-service-type
                                       (list `("modprobe.d/lkrg.conf"
-                                              ,lkrg-config)
-                                            `("modprobe.d/tuxedo_keyboard.conf"
-                                              ,tuxedo-config)))
+                                              ,lkrg-config)))
                       (modify-services %desktop-services
                           (delete modem-manager-service-type)
                           (delete ntp-service-type)
-;                           (ntp-service-type
-;                             config => (ntp-configuration
-;                                         (inherit config)
-;                                         (servers %my-ntp-servers)
-;                                         (allow-large-adjustment? #f)
-;                                         (ntp ntp)))
                           (network-manager-service-type
                             config => (network-manager-configuration
                                       (inherit config)
@@ -219,107 +222,137 @@
                                                (settings (append %kicksecure-sysctl-rules
                                                                  %default-sysctl-settings))))))))
   (kernel linux-xanmod-hardened)
-  (kernel-loadable-modules (list lkrg-my tuxedo-keyboard))
+  (kernel-loadable-modules (list lkrg-my))
   (initrd microcode-initrd)
   (initrd-modules
-    ;; we have built xts into the kernel
-    (cons* "vfio_pci" "vfio_virqfd" "nvme"
+    (cons* "nvme"
            %base-initrd-modules))
 
-  (firmware (cons* iwlwifi-firmware
-                   ibt-hw-firmware
-                   realtek-firmware
-                   %base-firmware))
+;   (firmware (cons* ; iwlwifi-firmware
+;                    ; ibt-hw-firmware
+;                    realtek-firmware
+;                    %base-firmware))
+  (firmware (list linux-firmware))
   ;; Use the UEFI variant of GRUB with the EFI System
   ;; Partition mounted on /boot/efi.
   (bootloader (bootloader-configuration
-                (bootloader grub-efi-bootloader)
+                (bootloader grub-efi-bootloader-luks2)
                 (targets '("/boot/efi"))
                 (timeout 30)
-                (menu-entries
-                  (list
-                    (menu-entry
-                    (label "Windows")
-                    (device (uuid "C48C-E4BD" 'fat))
-                    (chain-loader "/EFI/Microsoft/Boot/bootmgfw.efi"))))
                 (keyboard-layout keyboard-layout)))
+;   (bootloader (bootloader-configuration
+;                 (bootloader grub-efi-luks2-bootloader)
+;                 (targets '("/boot/efi"))
+;                 (timeout 30)
+;                 (keyboard-layout keyboard-layout)))
 
   ;; Specify a mapped device for the encrypted root partition.
   ;; The UUID is that returned by 'cryptsetup luksUUID'.
   (mapped-devices
-   (list (mapped-device
-          (source (uuid "eecc00eb-efa0-4ef9-8274-b6c88e755e23"))
-          (target "system")
+   (list 
+      (mapped-device
+          (source (uuid "3758ac97-d521-4d80-adca-d19d4bc57b88"))
+          (target "cryptroot0")
+          (type luks-device-mapping))
+      (mapped-device
+          (source (uuid "f6743f8e-8c94-482a-b3e0-ec1bf138a540"))
+          (target "cryptswap")
+          (type luks-device-mapping))
+      (mapped-device
+          (source (uuid "2c4ab6e5-ec99-417c-a9cc-66788f094ba2"))
+          (target "cryptroot1")
           (type luks-device-mapping))))
 
-  (file-systems (append
-                 (list (file-system
-                         (device (file-system-label "system"))
-                         (mount-point "/")
-                         (type "btrfs")
-                         (flags '(no-atime))
-                         (needed-for-boot? #t)
-                         (options "subvol=root,compress=zstd,ssd,discard=async")
-                         (dependencies mapped-devices))
-                       (file-system
-                         (device (file-system-label "system"))
-                         (mount-point "/swap")
-                         (type "btrfs")
-                         (flags '(no-atime))
-                         (needed-for-boot? #t)
-                         (options "subvol=swap,ssd,discard=async")
-                         (dependencies mapped-devices))
-                       (file-system
-                         (device (file-system-label "system"))
-                         (mount-point "/gnu/store")
-                         (type "btrfs")
-                         (flags '(no-atime))
-                         (options "subvol=gnu-store,compress=zstd,ssd,discard=async")
-                         (dependencies mapped-devices))
-                       (file-system
-                         (device (file-system-label "system"))
-                         (mount-point "/var/log")
-                         (type "btrfs")
-                         (flags '(no-atime))
-                         (options "subvol=var-log,compress=zstd,ssd,discard=async")
-                         (dependencies mapped-devices))
-                       (file-system
-                         (device (file-system-label "system"))
-                         (mount-point "/home")
-                         (type "btrfs")
-                         (flags '(no-atime))
-                         (options "subvol=home,compress=zstd,ssd,discard=async")
-                         (dependencies mapped-devices))                        
-                       (file-system
-                         (device (uuid "E446-A12F" 'fat16))
-                         (mount-point "/boot/efi")
-                         (type "vfat")
-                         (flags '(no-suid no-exec no-dev))
-                        ))
-                 (delete %debug-file-system
-                         %base-file-systems)))
+  (file-systems (let ((subvol-root 
+                        (file-system
+                          (device "/dev/mapper/cryptroot0")
+                          (mount-point "/")
+                          (type "btrfs")
+                          (flags '(no-atime))
+                          (options "subvol=root,compress=zstd,ssd,discard=async")
+                          (needed-for-boot? #t)
+                          (dependencies mapped-devices)))
+                      (subvol-gnu-store 
+                        (file-system
+                          (device "/dev/mapper/cryptroot0")
+                          (mount-point "/gnu/store")
+                          (type "btrfs")
+                          (flags '(no-atime))
+                          (options "subvol=gnu-store,compress=zstd,ssd,discard=async")
+                          (dependencies mapped-devices))))
+                  (append
+                    (list subvol-root
+                          subvol-gnu-store
+                          (file-system
+                            (device "/harden/var/tmp")
+                            (mount-point "/var/tmp")
+                            (type "none")
+                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            (flags '(no-atime bind-mount))
+                            (options "compress=zstd,ssd,discard=async")
+                            (dependencies (list subvol-gnu-store)))
+                          (file-system
+                            (device "/harden/var/log")
+                            (mount-point "/var/log")
+                            (type "none")
+                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            (flags '(no-atime bind-mount))
+                            (options "compress=zstd,ssd,discard=async")
+                            (dependencies (list subvol-gnu-store)))
+                          (file-system
+                            (device "/harden/tmp")          ; NOTE: The permission of this folder should be drwxrwxrwt
+                            (mount-point "/tmp")
+                            (type "none")
+                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            (flags '(no-atime bind-mount))
+                            (options "compress=zstd,ssd,discard=async")
+                            (dependencies (list subvol-gnu-store)))
+                          (file-system
+                            (device "/harden/home")
+                            (mount-point "/home")
+                            (type "none")
+                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            ;(flags '(no-atime no-suid no-dev bind-mount))
+                            (flags '(no-atime bind-mount))
+                            (options "compress=zstd,ssd,discard=async")
+                            (dependencies (list subvol-gnu-store)))
+                          (file-system
+                            (device "/harden/boot")
+                            (mount-point "/boot")
+                            (type "none")
+                            ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
+                            (flags '(no-atime bind-mount))
+                            (options "compress=zstd,ssd,discard=async")
+                            (dependencies (list subvol-gnu-store)))
+                          (file-system
+                            (device (uuid "3E3D-CF51" 'fat32))
+                            (mount-point "/boot/efi")
+                            (type "vfat")
+                            ;(flags '(no-suid no-exec no-dev))
+                            ))
+                    (delete %debug-file-system
+                            %base-file-systems))))
   (swap-devices
     (list (swap-space
-            (target "/swap/swapfile")
-            (dependencies (filter (file-system-mount-point-predicate "/swap")
-                                   file-systems))
+            (target "/dev/mapper/cryptswap")
+            (dependencies mapped-devices)
             (discard? #t))))
 
   (kernel-arguments
     (append (cons*; ;; for hibernation
-                    ; "resume=/dev/mapper/system"
-                    ; "resume_offset=17255"
+                    "resume=/dev/mapper/cryptswap"
 
                     ;; for pci passthrough
                     "intel_iommu=on"
+                    "amd_iommu=on"
                     ; "iommu=pt"
-                    "vfio-pci.ids=8086:1901,10de:1f11,10de:10f9,10de:1ada,10de:1adb,1987:5008"
+                    ; "vfio-pci.ids=8086:1901,10de:1f11,10de:10f9,10de:1ada,10de:1adb,1987:5008"
 
                     ;; CPU mitigations, we need SMT enabled because of performance
                     "mitigations=auto"
 
                     ;; harden
                     ; "module.sig_enforce=1" ; equivalent to CONFIG_MODULE_SIG_FORCE=y
-                    "modprobe.blacklist=dccp,sctp,rds,tipc,n-hdlc,ax25,netrom,x25,rose,decnet,econet,af_802154,ipx,appletalk,psnap,p8023,p8022,can,atm,cramfs,freevxfs,jffs2,hfs,hfsplus,udf,nfs,nfsv3,nfsv4,ksmbd,gfs2,vivid,bluetooth,btusb,firewire-core"
+                    "modprobe.blacklist=dccp,sctp,rds,tipc,n-hdlc,ax25,netrom,x25,rose,decnet,econet,af_802154,ipx,appletalk,psnap,p8023,p8022,can,atm,cramfs,freevxfs,jffs2,hfs,hfsplus,udf,nfs,nfsv3,nfsv4,ksmbd,gfs2,vivid,bluetooth,btusb,firewire-core,thunderbolt"
                     %kicksecure-kernel-arguments)
             %default-kernel-arguments)))
