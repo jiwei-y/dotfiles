@@ -344,7 +344,7 @@ normal"))
     (append (cons*; ;; for hibernation
                     "resume=/dev/mapper/cryptswap"
                     ;; set default suspend mode to s3 to save power, not supported on code01
-                    "mem_sleep_default=deep"
+                    ;"mem_sleep_default=deep"
                     ;; reduce power consumption in s2idle
                     "nvme.noacpi=1"
 
