@@ -27,6 +27,7 @@
   (srfi srfi-1)) ; For filter-map and "first"
 
 (use-service-modules
+ authentication
  dbus
  desktop
  linux
@@ -57,6 +58,12 @@
   #~(job "5 22 1 * *"            ;Vixie cron syntax
          "guix gc -d 2m -F 10G"))
 
+(define %enable-cpu-boost-udev-rule
+  (udev-rule
+    "41-enable-cpu-boost.rules"
+    (string-append "KERNEL==\"cpu\", SUBSYSTEM==\"event_source\", ACTION==\"add\", "
+                   "RUN+=\"/bin/sh -c 'echo 1 > /sys/devices/system/cpu/cpufreq/boost'\"")))
+
 (define %solaar-udev-rules
   (file->udev-rule
     "42-logitech-unify-permissions.rules"
@@ -67,6 +74,15 @@
                            "rules.d/" commit "/42-logitech-unify-permissions.rules"))
        (sha256
         (base32 "1j2hizasd9303783ay7n2aymx12l3kk2jijcmn4dwczlk900h4ci"))))))
+(define %block-logi-wake-udev-rule
+  (udev-rule
+    "90-block-logi-wake.rules"
+    (string-append "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+                   "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c539\", "
+                   "ATTR{power/wakeup}=\"disabled\""
+                   "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+                   "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c091\", "
+                   "ATTR{power/wakeup}=\"disabled\"")))
 
 (define lkrg-config
   (plain-file "lkrg.conf"
@@ -103,7 +119,7 @@
         (when efi-dir
             (let ((grub-mkimage (string-append bootloader "/bin/grub-mkimage"))
                   ;; Required modules, YMMV.
-                  (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "btrfs"))
+                  (modules (list "luks2" "part_gpt" "cryptodisk" "gcry_rijndael" "pbkdf2" "gcry_sha256" "gcry_sha512" "btrfs"))
                   (prefix (string-append mount-point "/root/harden/boot/grub"))  ; btrfs subvol root
                   ;; Different configuration required to set up a crypto
                   ;; device. Change crypto_uuid to match your output of
@@ -172,8 +188,9 @@ normal"))
 ;                                ))
 ;                      (service virtlog-service-type)
                       (service gnome-desktop-service-type)
+                      (service fprintd-service-type)
                       (simple-service 'ratbagd dbus-root-service-type (list libratbag)) ; for piper
-                      ; (service usbguard-service-type)
+                      (service usbguard-service-type)
                       (service chronyd-service-type)
                       (service tlp-service-type
                         (tlp-configuration
@@ -314,7 +331,7 @@ normal"))
                             (mount-point "/home")
                             (type "none")
                             ;(flags '(no-atime no-suid no-exec no-dev bind-mount))
-                            (flags '(no-atime no-suid bind-mount))
+                            (flags '(no-atime no-suid no-dev bind-mount))
                             ;(flags '(no-atime bind-mount))
                             (options "compress=zstd,ssd,degraded,discard=async")
                             (dependencies (list subvol-gnu-store)))
@@ -347,6 +364,9 @@ normal"))
                     ;"mem_sleep_default=deep"
                     ;; reduce power consumption in s2idle
                     "nvme.noacpi=1"
+
+                    ;; enable amd-pstate
+                    "amd_pstate=passive"
 
                     ;; for pci passthrough
                     "intel_iommu=on"

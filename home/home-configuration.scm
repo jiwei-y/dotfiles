@@ -19,6 +19,7 @@
                                        "solaar"
                                        "cpupower"
                                        "powertop"
+                                       "turbostat"
                                        "gnome-tweaks"
                                        "virt-manager"
                                        "lyx"
