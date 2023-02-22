@@ -22,6 +22,7 @@
   (me packages nvidia)
   (me services sound) ; pipewire
   (me services ntp) ; chrony
+  (me services pm)
   (me services usbguard)
   (me utils kicksecure)
   (srfi srfi-1)) ; For filter-map and "first"
@@ -35,7 +36,7 @@
  ssh
  virtualization
  xorg
- pm
+ ;pm    ; use pm in mychannel instead
 )
 
 (use-package-modules certs curl gnome firmware ibus samba)
@@ -107,7 +108,7 @@
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp smartmontools fwupd
+          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd
                  git curl ibus ibus-rime
                  %base-packages))
     `(,@my-base-packages)))
@@ -196,9 +197,13 @@ normal"))
                         (tlp-configuration
                           (cpu-scaling-governor-on-ac (list "performance"))
                           (cpu-scaling-governor-on-bat (list "powersave"))
+                          (cpu-energy-perf-policy-on-ac "performance")
+                          (cpu-energy-perf-policy-on-bat "balance_power")
                           (cpu-boost-on-ac? #t)
                           (cpu-boost-on-bat? #f)
-                          (disks-devices (list "nvme0n1" "nvme1n1"))
+                          (cpu-hwp-dyn-boost-on-ac? #t)
+                          (cpu-hwp-dyn-boost-on-bat? #f)
+                          (disk-devices (list "nvme0n1" "nvme1n1"))
                           (disk-iosched (list "none" "none"))     ;; https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/monitoring_and_managing_system_status_and_performance/setting-the-disk-scheduler_monitoring-and-managing-system-status-and-performance#the-default-disk-scheduler_setting-the-disk-scheduler
                           (pcie-aspm-on-ac "default")         ;; https://linrunner.de/tlp/settings/runtimepm.html#pcie-aspm-on-ac-bat
                           (pcie-aspm-on-bat "powersupersave")
@@ -365,8 +370,8 @@ normal"))
                     ;; reduce power consumption in s2idle
                     "nvme.noacpi=1"
 
-                    ;; enable amd-pstate
-                    "amd_pstate=passive"
+                    ;; enable amd-pstate active mode
+                    "amd_pstate=active"
 
                     ;; for pci passthrough
                     "intel_iommu=on"
