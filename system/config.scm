@@ -20,6 +20,7 @@
   (me packages file-systems)  ; snapper
   (me packages linux) ; xanmod
   (me packages nvidia)
+  (me services authentication)  ;; fprintd
   (me services sound) ; pipewire
   (me services ntp) ; chrony
   (me services pm)
@@ -28,7 +29,7 @@
   (srfi srfi-1)) ; For filter-map and "first"
 
 (use-service-modules
- authentication
+ ;authentication    ;; use authentication in mychannel instead
  dbus
  desktop
  linux
@@ -36,7 +37,7 @@
  ssh
  virtualization
  xorg
- ;pm    ; use pm in mychannel instead
+ ;pm    ;; use mychannel instead
 )
 
 (use-package-modules certs curl gnome firmware ibus samba)
@@ -59,11 +60,20 @@
   #~(job "5 22 1 * *"            ;Vixie cron syntax
          "guix gc -d 2m -F 10G"))
 
-(define %enable-cpu-boost-udev-rule
+;(define %enable-cpu-boost-udev-rules
+;  (udev-rule
+;    "41-enable-cpu-boost.rules"
+;    (string-append "KERNEL==\"cpu\", SUBSYSTEM==\"event_source\", ACTION==\"add\", "
+;                   "RUN+=\"/bin/sh -c 'echo 1 > /sys/devices/system/cpu/cpufreq/boost'\"")))
+
+(define %refresh-lkrg-bat-udev-rules    ;; kint_validate=1 for avoiding getting stuck with amd-pstate and schedutil, not working
   (udev-rule
-    "41-enable-cpu-boost.rules"
-    (string-append "KERNEL==\"cpu\", SUBSYSTEM==\"event_source\", ACTION==\"add\", "
-                   "RUN+=\"/bin/sh -c 'echo 1 > /sys/devices/system/cpu/cpufreq/boost'\"")))
+    "41-refresh-lkrg-bat.rules"
+    (string-append "KERNEL==\"cpu[0-15]\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}==\"schedutil\", "
+                   "RUN+=\"/bin/sh -c 'sysctl lkrg.kint_validate=1'\"
+"
+                   "KERNEL==\"cpu[0-15]\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}!=\"schedutil\", "
+                   "RUN+=\"/bin/sh -c 'sysctl lkrg.kint_validate=3'\"")))
 
 (define %solaar-udev-rules
   (file->udev-rule
@@ -75,20 +85,31 @@
                            "rules.d/" commit "/42-logitech-unify-permissions.rules"))
        (sha256
         (base32 "1j2hizasd9303783ay7n2aymx12l3kk2jijcmn4dwczlk900h4ci"))))))
-(define %block-logi-wake-udev-rule
+;(define %block-logi-wake-udev-rules
+;  (udev-rule
+;    "90-block-logi-wake.rules"
+;    (string-append "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+;                   "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c539\", "
+;                   "ATTR{power/wakeup}=\"disabled\"
+;"
+;                   "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+;                   "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c091\", "
+;                   "ATTR{power/wakeup}=\"disabled\"")))
+(define %block-logi-wake-udev-rules
   (udev-rule
     "90-block-logi-wake.rules"
-    (string-append "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+    (string-append "SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
                    "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c539\", "
-                   "ATTR{power/wakeup}=\"disabled\""
-                   "ACTION==\"add\", SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
+                   "ATTR{power/wakeup}=\"disabled\"
+"
+                   "SUBSYSTEM==\"usb\", DRIVERS==\"usb\", "
                    "ATTR{idVendor}==\"046d\", ATTR{idProduct}==\"c091\", "
                    "ATTR{power/wakeup}=\"disabled\"")))
 
 (define lkrg-config
   (plain-file "lkrg.conf"
-              "options lkrg hide=1 umh_enforce=0"))
-
+              "options lkrg hide=1 umh_enforce=0 msr_validate=1 kint_validate=1"))    ;; kint_validate=1 for avoiding getting stuck with amd-pstate and schedutil
+              ;; umh_enforce=0 for run guix modprobe
 (define %my-substitute-urls
   '(; "https://mirrors.sjtug.sjtu.edu.cn/guix"
     ; "https://mirror.sjtu.edu.cn/guix" ;Slow
@@ -109,7 +130,7 @@
   (let ()
     (define my-base-packages
           (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd
-                 git curl ibus ibus-rime
+                 git curl ibus ibus-rime ibus-anthy
                  %base-packages))
     `(,@my-base-packages)))
 
@@ -172,7 +193,9 @@ normal"))
                           ;; lower nice limit for users, but root can go further to rescue system
                           (pam-limits-entry "*" 'both 'nice -19)
                           (pam-limits-entry "root" 'both 'nice -20)))
+                      (udev-rules-service 'refresh-lkrg-bat %refresh-lkrg-bat-udev-rules)
                       (udev-rules-service 'solaar %solaar-udev-rules)
+                      (udev-rules-service 'block-logi-wake %block-logi-wake-udev-rules)
                       (simple-service 'my-mcron-jobs
                                       mcron-service-type
                                         (list ; fstrim-job
@@ -196,7 +219,8 @@ normal"))
                       (service tlp-service-type
                         (tlp-configuration
                           (cpu-scaling-governor-on-ac (list "performance"))
-                          (cpu-scaling-governor-on-bat (list "powersave"))
+                          (cpu-scaling-governor-on-bat (list "schedutil"))
+                          ;(cpu-scaling-max-freq-on-bat 1500000)   ;; doesn't work with pstate
                           (cpu-energy-perf-policy-on-ac "performance")
                           (cpu-energy-perf-policy-on-bat "balance_power")
                           (cpu-boost-on-ac? #t)
@@ -354,8 +378,9 @@ normal"))
                             (type "vfat")
                             (flags '(no-suid no-exec no-dev))
                             ))
-                    (delete %debug-file-system
-                            %base-file-systems))))
+;                    (delete %debug-file-system
+;                            %base-file-systems)
+                            %base-file-systems)))
   (swap-devices
     (list (swap-space
             (target "/dev/mapper/cryptswap")
@@ -370,8 +395,11 @@ normal"))
                     ;; reduce power consumption in s2idle
                     "nvme.noacpi=1"
 
-                    ;; enable amd-pstate active mode
-                    "amd_pstate=active"
+                    ;; enable amd-pstate active mode (not yet)
+                    ;"amd_pstate=active"
+
+                    ;; enable amd-pstate passive mode
+                    "amd_pstate=passive"
 
                     ;; for pci passthrough
                     "intel_iommu=on"
@@ -384,6 +412,6 @@ normal"))
 
                     ;; harden
                     ; "module.sig_enforce=1" ; equivalent to CONFIG_MODULE_SIG_FORCE=y
-                    "modprobe.blacklist=dccp,sctp,rds,tipc,n-hdlc,ax25,netrom,x25,rose,decnet,econet,af_802154,ipx,appletalk,psnap,p8023,p8022,can,atm,cramfs,freevxfs,jffs2,hfs,hfsplus,udf,nfs,nfsv3,nfsv4,ksmbd,gfs2,vivid,bluetooth,btusb,firewire-core,thunderbolt"
+                    "modprobe.blacklist=dccp,sctp,rds,tipc,n-hdlc,ax25,netrom,x25,rose,decnet,econet,af_802154,ipx,appletalk,psnap,p8023,p8022,can,atm,cramfs,freevxfs,jffs2,hfs,hfsplus,udf,nfs,nfsv3,nfsv4,ksmbd,gfs2,vivid,bluetooth,btusb,firewire-core"    ;; thunderbolt
                     %kicksecure-kernel-arguments)
             %default-kernel-arguments)))

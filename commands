@@ -66,3 +66,6 @@ guix build onedrive -f ~/misc/dotfiles/test/sync/sync.scm -L ~/misc/dotfiles/tes
 
 ## qv2ray problems with wayland
 QT_QPA_PLATFORM=xcb qv2ray
+
+## test problems in suspend (needs debugfs)
+sudo -E python3 /home/jiwei/Downloads/amd_s2idle.py
