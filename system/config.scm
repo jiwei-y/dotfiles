@@ -129,7 +129,7 @@
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd
+          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd bolt
                  git curl ibus ibus-rime ibus-anthy
                  %base-packages))
     `(,@my-base-packages)))
@@ -342,9 +342,8 @@
                             (type "vfat")
                             (flags '(no-suid no-exec no-dev))
                             ))
-;                    (delete %debug-file-system
-;                            %base-file-systems)
-                            %base-file-systems)))
+                    (delete %debug-file-system
+                            %base-file-systems))))
   (swap-devices
     (list (swap-space
             (target "/dev/mapper/cryptswap")

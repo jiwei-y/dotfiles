@@ -26,6 +26,8 @@
                                        "dconf-editor"
                                        "xdg-desktop-portal-gtk"
                                        "seahorse"
+                                       "fprintd"
+                                       "usbguard"
                                        "rstudio"
                                        "network-manager-openconnect"
                                        "gnome-power-manager"
