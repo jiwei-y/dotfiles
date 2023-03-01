@@ -69,10 +69,10 @@
 (define %refresh-lkrg-bat-udev-rules    ;; kint_validate=1 for avoiding getting stuck with amd-pstate and schedutil, not working
   (udev-rule
     "41-refresh-lkrg-bat.rules"
-    (string-append "KERNEL==\"cpu[0-15]\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}==\"schedutil\", "
+    (string-append "KERNEL==\"cpu0\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}==\"schedutil\", "
                    "RUN+=\"/bin/sh -c 'sysctl lkrg.kint_validate=1'\"
 "
-                   "KERNEL==\"cpu[0-15]\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}!=\"schedutil\", "
+                   "KERNEL==\"cpu0\", SUBSYSTEM==\"cpu\", ATTR{cpufreq/scaling_governor}!=\"schedutil\", "
                    "RUN+=\"/bin/sh -c 'sysctl lkrg.kint_validate=3'\"")))
 
 (define %solaar-udev-rules

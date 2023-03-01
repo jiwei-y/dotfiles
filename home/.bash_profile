@@ -28,10 +28,5 @@ export GIT_EXEC_PATH=/home/jiwei/.guix-home/profile/libexec/git-core
 # theme
 export QT_STYLE_OVERRIDE=kvantum
 
-# v2ray
-# http_proxy=http://127.0.0.1:10809
-# https_proxy=http://127.0.0.1:10809
-# socks_proxy=socks5://127.0.0.1:10808
-
 # rstudio
 export RSTUDIO_CHROMIUM_ARGUMENTS="--no-sandbox"

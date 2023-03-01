@@ -29,7 +29,7 @@ guix home import ~/misc/test/home
 guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
 
 ## combination
-guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix home reconfigure /home/jiwei/misc/dotfiles/home/home-configuration.scm
+guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm
 
 ## solve problems of fonts and cursors in flatpak
 sh ~/misc/dotfiles/flatpak.sh

@@ -13,8 +13,6 @@
              (me services sound))  ; pipewire copied from (rde features linux)
 
 (home-environment
-  ;; Below is the list of packages that will show up in your
-  ;; Home profile, under ~/.guix-home/profile.
   (packages (specifications->packages (list "qv2ray"
                                        "solaar"
                                        "cpupower"
@@ -30,7 +28,7 @@
                                        "usbguard"
                                        "rstudio"
                                        "network-manager-openconnect"
-                                       "gnome-power-manager"
+                                       ;"gnome-power-manager"
                                        ;"ibus-mozc"
                                        ;"ibus-anthy"
                                        ;"ibus-rime"
@@ -71,22 +69,56 @@
                                        "p7zip"
                                        ;"looking-glass-client"
                                       )))
-
-  ;; Below is the list of Home services.  To search for available
-  ;; services, run 'guix home search KEYWORD' in a terminal.
   (services
     (append (home-pipewire-services)
-            (list (service home-dbus-service-type)
-                  (service home-bash-service-type
-                                  (home-bash-configuration
-                                  (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
-                                              ("ls" . "ls -p --color=auto")
-                                              ("sudo" . "sudo -v; sudo ")))
-                                  (bashrc
-                                    (list (local-file
-                                            "/home/jiwei/misc/dotfiles/home/.bashrc"
-                                            "bashrc")))
-                                  (bash-profile
-                                    (list (local-file
-                                            "/home/jiwei/misc/dotfiles/home/.bash_profile"
-                                            "bash_profile")))))))))
+            (list
+              (service home-dbus-service-type)
+              (service home-bash-service-type
+                      (home-bash-configuration
+                        (guix-defaults? #t)
+                        (environment-variables
+                          `(;; for gnome to find guix binaries
+                            ("GUIX_PROFILE" . "$HOME/.guix-profile")
+                            ;; flatpak
+                            ("XDG_DATA_DIRS" . "$XDG_DATA_DIRS:/var/lib/flatpak/exports/share")
+                            ;; wayland
+                            ("GDK_BACKEND" . "wayland,x11")
+                            ("QT_QPA_PLATFORMTHEME" . "gnome")
+                            ("QT_QPA_PLATFORM" . "wayland;xcb")
+                            ;; ibus
+                            ("GTK_IM_MODULE" . "ibus")
+                            ("QT_IM_MODULE" . "ibus")
+                            ("XMODIFILERS" . "@im=ibus")
+                            ("GUIX_GTK2_IM_MODULE_FILE" .  "/run/current-system/profile/lib/gtk-2.0/2.10.0/immodules-gtk2.cache")
+                            ("GUIX_GTK3_IM_MODULE_FILE" .  "/run/current-system/profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache")
+                            ;; git
+                            ("GIT_EXEC_PATH" . "$HOME/.guix-home/profile/libexec/git-core")
+                            ;; QT theme
+                            ("QT_STYLE_OVERRIDE" . "kvantum")
+                            ;; rstudio
+                            ("RSTUDIO_CHROMIUM_ARGUMENTS" . "--no-sandbox")
+                            ;; Append guix-home directories to bash completion dirs.
+                            ("BASH_COMPLETION_USER_DIR" .
+                            ,(string-append "$BASH_COMPLETION_USER_DIR:"
+                                            "$HOME/.guix-home/profile/share/bash-completion/completions:"
+                                            "$HOME/.guix-home/profile/etc/bash_completion.d"))))
+                        (aliases
+                          `(("cp" . "cp --reflink=auto")
+                            ("sudo" . "sudo -v; sudo")
+                            ("my-system" .
+                            ,(string-append "sudo guix system reconfigure "
+                                            "~/misc/dotfiles/system/config.scm"))
+                            ("my-home" .
+                            ,(string-append "guix home reconfigure "
+                                            "~/misc/dotfiles/home/home-configuration.scm"))
+                            ("my-binity" .
+                            ,(string-append "sudo guix system reconfigure ~/misc/dotfiles/system/config.scm && "
+                                            "guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm"))
+                            ("my-trinity" .
+                            ,(string-append "guix pull && sudo guix system reconfigure ~/misc/dotfiles/system/config.scm"
+                                            " && guix home reconfigure ~/misc/dotfiles/home/home-configuration.scm"))))
+                        (bashrc
+                          (list
+                            (mixed-text-file "bashrc" "
+      source \"$HOME/.guix-profile/etc/profile\"
+      ")))))))))
