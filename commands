@@ -7,6 +7,16 @@ sh ~/misc/dotfiles/suspend.sh
 ## afrer resume
 sudo herd restart kernel-module-loader
 
+## allow TRIM, disable workqueue on LUKS
+sudo cryptsetup --perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent refresh cryptroot0
+sudo cryptsetup --perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent refresh cryptroot1
+sudo cryptsetup --perf-no_read_workqueue --perf-no_write_workqueue --allow-discards --persistent refresh cryptswap
+
+## reencrypt
+sudo cryptsetup reencrypt --keep-key --type luks2 --pbkdf pbkdf2 -h sha512 /dev/nvme0n1p1
+sudo cryptsetup reencrypt --keep-key --type luks2 --pbkdf pbkdf2 -h sha512 /dev/nvme1n1p2
+sudo cryptsetup reencrypt --keep-key --type luks2 --pbkdf pbkdf2 -h sha512 /dev/nvme1n1p3
+
 ## Use http proxy for "guix pull"
 https_proxy=http://127.0.0.1:10809 guix pull --substitute-urls='https://mirror.sjtu.edu.cn/guix/'
 
