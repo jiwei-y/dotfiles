@@ -18,6 +18,7 @@
   (nongnu system linux-initrd)
   (me bootloader grub)
   (me packages file-systems)  ; snapper
+  (me packages ibus)
   (me packages linux) ; xanmod
   (me packages nvidia)
   (me services authentication)  ;; fprintd
@@ -129,8 +130,8 @@
 (define %final-pure-packages
   (let ()
     (define my-base-packages
-          (cons* gvfs cifs-utils nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd bolt
-                 git curl ibus ibus-rime ibus-anthy
+          (cons* gvfs nss-certs ovmf jitterentropy-rngd btrfs-progs snapper tlp-git smartmontools fwupd bolt
+                 git curl ;ibus ibus-typing-booster ibus-rime ibus-mozc-ut ibus-anthy
                  %base-packages))
     `(,@my-base-packages)))
 

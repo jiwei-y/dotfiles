@@ -6,11 +6,30 @@
 
 (use-modules (gnu home)
              (gnu packages)
+             (gnu packages admin)
+             (gnu packages ibus)
              (gnu services)
              (guix gexp)
              (gnu home services desktop)
              (gnu home services shells)
+             (gnu home services shepherd)
              (me services sound))  ; pipewire copied from (rde features linux)
+
+(define ibus-daemon-service
+  (shepherd-service
+   (provision '(ibus-daemon))
+   (documentation "Run 'ibus-daemon --drxR'")
+   (respawn? #f)
+   (one-shot? #t)
+   (start #~(make-forkexec-constructor
+             (list #$(file-append ibus "/bin/ibus-daemon")
+                   "--daemonize"
+                   "--replace"
+                   "--xim"
+                   "--restart"
+                  )
+             #:log-file (string-append (getenv "XDG_LOG_HOME") "/ibus.log")))
+   (stop #~(make-kill-destructor))))
 
 (home-environment
   (packages (specifications->packages (list "qv2ray"
@@ -29,10 +48,11 @@
                                        "rstudio"
                                        "network-manager-openconnect"
                                        ;"gnome-power-manager"
-                                       ;"ibus-mozc"
-                                       ;"ibus-anthy"
-                                       ;"ibus-rime"
-                                       ;"ibus"
+                                       "ibus-typing-booster"
+                                       "ibus-mozc-ut"
+                                       "ibus-anthy"
+                                       "ibus-rime"
+                                       "ibus"
                                        "flatpak"
                                        "openconnect-sso"
                                        "btrfs-progs"
@@ -73,6 +93,11 @@
     (append (home-pipewire-services)
             (list
               (service home-dbus-service-type)
+              (service home-shepherd-service-type
+                        (home-shepherd-configuration
+                          (shepherd shepherd)
+                          (services
+                            (list ibus-daemon-service))))
               (service home-bash-service-type
                       (home-bash-configuration
                         (guix-defaults? #t)
@@ -89,8 +114,8 @@
                             ("GTK_IM_MODULE" . "ibus")
                             ("QT_IM_MODULE" . "ibus")
                             ("XMODIFILERS" . "@im=ibus")
-                            ("GUIX_GTK2_IM_MODULE_FILE" .  "/run/current-system/profile/lib/gtk-2.0/2.10.0/immodules-gtk2.cache")
-                            ("GUIX_GTK3_IM_MODULE_FILE" .  "/run/current-system/profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache")
+                            ("GUIX_GTK2_IM_MODULE_FILE" .  "$HOME/.guix-home/profile/lib/gtk-2.0/2.10.0/immodules-gtk2.cache")
+                            ("GUIX_GTK3_IM_MODULE_FILE" .  "$HOME/.guix-home/profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache")
                             ;; git
                             ("GIT_EXEC_PATH" . "$HOME/.guix-home/profile/libexec/git-core")
                             ;; QT theme
@@ -105,6 +130,9 @@
                         (aliases
                           `(("cp" . "cp --reflink=auto")
                             ("sudo" . "sudo -v; sudo")
+                            ("my-stata" .
+                            ,(string-append "guix shell -CNF -u user -m ~/misc/dotfiles/shell/stata.scm "
+                                            "--no-cwd --share=$HOME/boxes/GAIA=$HOME --preserve='^DISPLAY$'"))
                             ("my-system" .
                             ,(string-append "sudo guix system reconfigure "
                                             "~/misc/dotfiles/system/config.scm"))

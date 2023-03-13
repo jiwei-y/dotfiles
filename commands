@@ -65,11 +65,14 @@ rm -rf ~/.config/ibus/bus
 curl -fsSL https://raw.githubusercontent.com/rime/plum/master/rime-install | bash -s -- iDvel/rime-ice:others/recipes/full
 
 ## stata
-guix shell -CNF -u user --no-cwd --share=$HOME/GAIA --share=$HOME/.stata17 --share=$HOME/ado --preserve='^DISPLAY$' gtk+ coreutils gzip tar findutils gcc@12:lib ncurses-with-tinfo@5 zlib libtiff libxml2 libxtst hicolor-icon-theme font-my-noto-core font-my-noto-emoji font-my-noto-sans-cjk font-my-noto-serif-cjk gnome-themes-extra murrine orchis-theme
-# /home/user/GAIA/stata17install/install
+#guix shell -CNF -u user --no-cwd --share=$HOME/boxes/GAIA=$HOME --preserve='^DISPLAY$' gtk+ coreutils gzip tar findutils gcc@12:lib ncurses-with-tinfo@5 zlib libtiff libxml2 libxtst hicolor-icon-theme font-my-noto-core font-my-noto-emoji font-my-noto-sans-cjk font-my-noto-serif-cjk gnome-themes-extra murrine orchis-theme
+#guix shell -CNF -u user -m ~/misc/dotfiles/shell/stata.scm --no-cwd --share=$HOME/boxes/GAIA=$HOME --preserve='^DISPLAY$'
+# /home/user/stata17install/install
 # ./stinit
-sh /home/user/GAIA/runstata.sh
+sh /home/user/runstata.sh
 
+## LLAMA
+guix shell -CNF -u user --no-cwd --share=$HOME/boxes/AMADEUS=$HOME coreutils python
 
 ## test build sample
 guix build onedrive -f ~/misc/dotfiles/test/sync/sync.scm -L ~/misc/dotfiles/test/sync
